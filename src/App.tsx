@@ -711,6 +711,60 @@ export default function App() {
             </p>
 
             <div className="venue-link-list">
+              {selectedCourt.url ? (
+                <a
+                  className="venue-link-row venue-link-primary"
+                  href={selectedCourt.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <span className="venue-link-icon">
+                    <ArrowUpRight size={18} />
+                  </span>
+                  <span>
+                    <strong>Website Booking</strong>
+                    <small>Visit the venue's official page or book directly</small>
+                  </span>
+                  <ArrowUpRight size={17} />
+                </a>
+              ) : (
+                <div className="venue-link-row venue-link-unavailable">
+                  <span className="venue-link-icon">
+                    <ArrowUpRight size={18} />
+                  </span>
+                  <span>
+                    <strong>Website Booking</strong>
+                    <small>Booking link will be added when available</small>
+                  </span>
+                  <span className="link-pending">Coming soon</span>
+                </div>
+              )}
+
+              {selectedCourt.facebookUrl ? (
+                <a
+                  className="venue-link-row"
+                  href={selectedCourt.facebookUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <span className="venue-link-icon facebook-icon">f</span>
+                  <span>
+                    <strong>Facebook</strong>
+                    <small>Visit the venue's Facebook page</small>
+                  </span>
+                  <ArrowUpRight size={17} />
+                </a>
+              ) : (
+                <div className="venue-link-row venue-link-unavailable">
+                  <span className="venue-link-icon facebook-icon">f</span>
+                  <span>
+                    <strong>Facebook</strong>
+                    <small>Link will be added when available</small>
+                  </span>
+                  <span className="link-pending">Coming soon</span>
+                </div>
+              )}
+
               <a
                 className="venue-link-row"
                 href={
@@ -722,56 +776,15 @@ export default function App() {
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                <span className="venue-link-icon"><MapPin size={18} /></span>
+                <span className="venue-link-icon">
+                  <MapPin size={18} />
+                </span>
                 <span>
                   <strong>Location</strong>
                   <small>Open directions in Google Maps</small>
                 </span>
                 <ArrowUpRight size={17} />
               </a>
-
-              {selectedCourt.facebookUrl ? (
-                <a
-                  className="venue-link-row"
-                  href={selectedCourt.facebookUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <span className="venue-link-icon facebook-icon">f</span>
-                  <span>
-                    <strong>Facebook page</strong>
-                    <small>Visit the venue's Facebook page</small>
-                  </span>
-                  <ArrowUpRight size={17} />
-                </a>
-              ) : (
-                <div className="venue-link-row venue-link-unavailable">
-                  <span className="venue-link-icon facebook-icon">f</span>
-                  <span>
-                    <strong>Facebook page</strong>
-                    <small>Link will be added when available</small>
-                  </span>
-                  <span className="link-pending">Coming soon</span>
-                </div>
-              )}
-
-              {selectedCourt.url && (
-                <a
-                  className="venue-link-row venue-link-primary"
-                  href={selectedCourt.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
-                  <span className="venue-link-icon">
-                    <ArrowUpRight size={18} />
-                  </span>
-                  <span>
-                    <strong>Website / Booking</strong>
-                    <small>Open the venue's official page</small>
-                  </span>
-                  <ArrowUpRight size={17} />
-                </a>
-              )}
             </div>
 
             <p className="venue-modal-note">
