@@ -183,7 +183,7 @@ export default function App() {
     if (!normalized) return courts
 
     return courts.filter((court) =>
-      [court.name, court.location, court.description, court.tag]
+      [court.name, court.location, court.tag]
         .join(' ')
         .toLowerCase()
         .includes(normalized)
@@ -213,7 +213,7 @@ export default function App() {
               id: c.id,
               name: c.name,
               location: c.location || '',
-              description: c.description || '',
+              courtCount: Number(c.court_count) || 1,
               url: c.website_url || undefined,
               facebookUrl: c.facebook_url || undefined,
               locationUrl: c.location_url || undefined,
@@ -525,7 +525,7 @@ export default function App() {
                     </div>
                   </div>
 
-                  <p className="venue-description">{court.description}</p>
+                  <p className="venue-description">{court.courtCount} {court.courtCount === 1 ? 'Court' : 'Courts'}</p>
 
                   <div className="card-footer">
                     <span className="direct-label">
@@ -792,7 +792,7 @@ export default function App() {
             </div>
 
             <p className="venue-modal-description">
-              {selectedCourt.description}
+              {selectedCourt.courtCount} {selectedCourt.courtCount === 1 ? 'Court' : 'Courts'}
             </p>
 
             <div className="venue-link-list">

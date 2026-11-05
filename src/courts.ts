@@ -6,7 +6,7 @@ export type Court = {
   id: string
   name: string
   location: string
-  description: string
+  courtCount: number
   url?: string
   facebookUrl?: string
   locationUrl?: string
@@ -21,7 +21,7 @@ export const STARTER_COURTS: Court[] = [
     id: 'eastside-pickle',
     name: 'Eastside Pickle',
     location: 'San Francisco area',
-    description: "Visit Eastside Pickle's website for venue information and booking details.",
+    courtCount: 1,
     url: 'https://eastsidepickle.com/',
     locationUrl: 'https://www.google.com/maps/search/?api=1&query=Eastside+Pickle+San+Francisco+Agusan+del+Sur',
     logo: eastsideLogo,
@@ -33,7 +33,7 @@ export const STARTER_COURTS: Court[] = [
     id: 'highway-drive',
     name: 'Highway Drive Pickleball',
     location: 'San Francisco area',
-    description: "Explore the courts and make your reservation through Highway Drive's booking page.",
+    courtCount: 1,
     url: 'https://hwaydrive-pickleball.courtbooking.workers.dev/',
     locationUrl: 'https://www.google.com/maps/search/?api=1&query=Highway+Drive+Pickleball+San+Francisco+Agusan+del+Sur',
     logo: highwayLogo,
@@ -45,7 +45,7 @@ export const STARTER_COURTS: Court[] = [
     id: 'lakbai-pickleball',
     name: 'Lakbai Pickleball',
     location: 'San Francisco area',
-    description: "Head to Lakbai Pickleball's booking website to get your game arranged.",
+    courtCount: 1,
     url: 'https://lakbaipickleballbooking.netlify.app/',
     locationUrl: 'https://www.google.com/maps/search/?api=1&query=Lakbai+Pickleball+San+Francisco+Agusan+del+Sur',
     logo: lakbaiLogo,

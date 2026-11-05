@@ -24,7 +24,7 @@ type DbCourt = {
   id: string
   name: string
   location: string
-  description: string | null
+  court_count: number
   website_url: string | null
   facebook_url: string | null
   location_url: string | null
@@ -40,7 +40,7 @@ type Draft = {
   id?: string
   name: string
   location: string
-  description: string
+  court_count: number
   website_url: string
   facebook_url: string
   location_url: string
@@ -55,7 +55,7 @@ type Draft = {
 const emptyDraft: Draft = {
   name: '',
   location: 'San Francisco, Agusan del Sur',
-  description: '',
+  court_count: 1,
   website_url: '',
   facebook_url: '',
   location_url: '',
@@ -71,7 +71,7 @@ const toDraft = (c: DbCourt): Draft => ({
   id: c.id,
   name: c.name,
   location: c.location,
-  description: c.description || '',
+  court_count: c.court_count ?? 1,
   website_url: c.website_url || '',
   facebook_url: c.facebook_url || '',
   location_url: c.location_url || '',
@@ -478,7 +478,7 @@ export default function AdminApp({ onBack }: { onBack: () => void }) {
       const payload = {
         name: draft.name.trim(),
         location: draft.location.trim(),
-        description: draft.description.trim(),
+        court_count: Math.max(1, Math.floor(Number(draft.court_count) || 1)),
         website_url: draft.website_url.trim() || null,
         facebook_url: draft.facebook_url.trim() || null,
         location_url: draft.location_url.trim() || null,
@@ -514,7 +514,7 @@ export default function AdminApp({ onBack }: { onBack: () => void }) {
     const payload = {
       name: draft.name.trim(),
       location: draft.location.trim(),
-      description: draft.description.trim(),
+      court_count: Math.max(1, Math.floor(Number(draft.court_count) || 1)),
       website_url: draft.website_url.trim() || null,
       facebook_url: draft.facebook_url.trim() || null,
       location_url: draft.location_url.trim() || null,
@@ -855,14 +855,17 @@ export default function AdminApp({ onBack }: { onBack: () => void }) {
                 />
               </label>
 
-              <label className="admin-full">
-                Description
-                <textarea
-                  rows={3}
-                  value={draft.description}
+              <label>
+                Number of courts *
+                <input
+                  type="number"
+                  min="1"
+                  step="1"
+                  value={draft.court_count}
                   onChange={(e) =>
-                    setDraft((d) => ({ ...d, description: e.target.value }))
+                    setDraft((d) => ({ ...d, court_count: Math.max(1, Number(e.target.value) || 1) }))
                   }
+                  required
                 />
               </label>
 
@@ -1046,6 +1049,7 @@ export default function AdminApp({ onBack }: { onBack: () => void }) {
                     <div className="admin-court-info">
                       <strong>{c.name}</strong>
                       <span>{c.location}</span>
+                      <small>{c.court_count} {c.court_count === 1 ? 'Court' : 'Courts'}</small>
                       <small>
                         {c.is_active
                           ? 'Visible on directory'

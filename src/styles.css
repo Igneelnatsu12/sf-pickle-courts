@@ -424,3 +424,134 @@ a.venue-link-primary:hover {
   border-color: #a8bd91;
   background: #F1F5F7;
 }
+
+/* Compact venue cards with retained footer actions */
+.court-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.court-card {
+  min-height: 0;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  border-radius: 9px;
+  box-shadow: 0 2px 8px rgba(20, 43, 59, 0.035);
+}
+
+.court-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(20, 43, 59, 0.08);
+}
+
+.court-card .card-topline {
+  margin-bottom: 12px;
+}
+
+.court-card .venue-identity {
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  column-gap: 12px;
+  row-gap: 3px;
+  align-items: center;
+  min-height: 0;
+  margin: 0;
+}
+
+.court-card .venue-logo,
+.court-card .venue-monogram {
+  grid-column: 1;
+  grid-row: 1 / 3;
+  width: 52px;
+  height: 52px;
+  flex: none;
+  border-radius: 8px;
+  padding: 3px;
+}
+
+.court-card .venue-details {
+  grid-column: 2;
+  grid-row: 1 / 2;
+  align-self: end;
+}
+
+.court-card .venue-details h3 {
+  margin: 0 0 3px;
+  font-size: 14px;
+  line-height: 1.25;
+  letter-spacing: -0.025em;
+}
+
+.court-card .venue-location {
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+/* This element displays the court-count badge when App.tsx uses court_count */
+.court-card .venue-description {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  margin: 8px 0 12px 64px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: #e1f5e5;
+  color: #247443;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+/* Keep both "View venue links" and "View details" */
+.court-card .card-footer {
+  margin-top: auto;
+  padding-top: 11px;
+}
+
+.court-card-clickable {
+  cursor: pointer;
+}
+
+.court-card-clickable:focus-visible {
+  outline: 3px solid #6f91a8;
+  outline-offset: 3px;
+}
+
+@media (max-width: 900px) {
+  .court-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .court-card:last-child:nth-child(odd) {
+    grid-column: auto;
+  }
+}
+
+@media (max-width: 620px) {
+  .court-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .court-card {
+    padding: 13px;
+  }
+
+  .court-card .venue-identity {
+    grid-template-columns: 50px minmax(0, 1fr);
+    column-gap: 11px;
+  }
+
+  .court-card .venue-logo,
+  .court-card .venue-monogram {
+    width: 50px;
+    height: 50px;
+  }
+
+  .court-card .venue-description {
+    margin-left: 61px;
+  }
+}
+
