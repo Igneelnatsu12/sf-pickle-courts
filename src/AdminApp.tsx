@@ -12,9 +12,11 @@ import {
   MessageSquare,
   MapPin,
   RefreshCw,
+  BarChart3,
 } from 'lucide-react'
 import { supabase, isSupabaseConfigured } from './lib/supabase'
 import './admin.css'
+import './analytics.css'
 
 type DbCourt = {
   id: string
@@ -107,6 +109,31 @@ const displayDate = (date: string) => new Date(date).toLocaleString('en-PH', {
   dateStyle: 'medium', timeStyle: 'short',
 })
 
+type ClickEvent = {
+  device_id: string
+  venue_name: string
+  click_type: 'website' | 'facebook' | 'location'
+  created_pht: string
+}
+
+type VenueAnalyticsRow = {
+  venue_name: string
+  facebook: number
+  website: number
+  location: number
+}
+
+const todayPHT = () => new Intl.DateTimeFormat('en-CA', {
+  timeZone: 'Asia/Manila', year: 'numeric', month: '2-digit', day: '2-digit',
+}).format(new Date())
+
+const monthStartPHT = () => `${todayPHT().slice(0, 7)}-01`
+
+const addOneDay = (date: string) => {
+  const [year, month, day] = date.split('-').map(Number)
+  return new Date(Date.UTC(year, month - 1, day + 1)).toISOString().slice(0, 10)
+}
+
 export default function AdminApp({ onBack }: { onBack: () => void }) {
   const [session, setSession] = useState<any>(null)
   const [loading, setLoading] = useState(true)
@@ -125,6 +152,13 @@ export default function AdminApp({ onBack }: { onBack: () => void }) {
   const [inboxBusyId, setInboxBusyId] = useState<string | null>(null)
   const [inboxError, setInboxError] = useState('')
   const [inboxNotice, setInboxNotice] = useState('')
+  const [adminPage, setAdminPage] = useState<'venues' | 'analytics'>('venues')
+  const [analyticsMode, setAnalyticsMode] = useState<'daily' | 'monthly' | 'custom'>('daily')
+  const [analyticsStart, setAnalyticsStart] = useState(todayPHT())
+  const [analyticsEnd, setAnalyticsEnd] = useState(todayPHT())
+  const [clickEvents, setClickEvents] = useState<ClickEvent[]>([])
+  const [analyticsLoading, setAnalyticsLoading] = useState(false)
+  const [analyticsError, setAnalyticsError] = useState('')
 
   useEffect(() => {
     if (!supabase) {
@@ -148,6 +182,7 @@ export default function AdminApp({ onBack }: { onBack: () => void }) {
     if (session) {
       loadCourts()
       loadInbox()
+      loadAnalytics()
     } else {
       setSuggestions([])
       setFeedback([])
@@ -174,6 +209,59 @@ export default function AdminApp({ onBack }: { onBack: () => void }) {
 
     setBusy(false)
   }
+
+  async function loadAnalytics() {
+    if (!supabase) return
+    setAnalyticsLoading(true)
+    setAnalyticsError('')
+    const today = todayPHT()
+    const startDate = analyticsMode === 'daily' ? today :
+      analyticsMode === 'monthly' ? monthStartPHT() : analyticsStart
+    const endDate = analyticsMode === 'daily' ? today :
+      analyticsMode === 'monthly' ? today : analyticsEnd
+
+    if (!startDate || !endDate || startDate > endDate) {
+      setAnalyticsError('Please choose a valid date range.')
+      setAnalyticsLoading(false)
+      return
+    }
+
+    const allRows: ClickEvent[] = []
+    const pageSize = 1000
+    try {
+      for (let offset = 0; ; offset += pageSize) {
+        const { data, error: queryError } = await supabase
+          .from('venue_click_events')
+          .select('device_id, venue_name, click_type, created_pht')
+          .gte('created_pht', `${startDate}T00:00:00`)
+          .lt('created_pht', `${addOneDay(endDate)}T00:00:00`)
+          .order('created_pht', { ascending: false })
+          .range(offset, offset + pageSize - 1)
+        if (queryError) throw queryError
+        const rows = (data || []) as ClickEvent[]
+        allRows.push(...rows)
+        if (rows.length < pageSize) break
+      }
+      setClickEvents(allRows)
+    } catch (err) {
+      console.error('Could not load venue analytics:', err)
+      setAnalyticsError(err instanceof Error ? err.message : 'Could not load analytics.')
+    } finally {
+      setAnalyticsLoading(false)
+    }
+  }
+
+  const analyticsRows: VenueAnalyticsRow[] = Object.values(
+    clickEvents.reduce<Record<string, VenueAnalyticsRow>>((acc, event) => {
+      if (!acc[event.venue_name]) {
+        acc[event.venue_name] = { venue_name: event.venue_name, facebook: 0, website: 0, location: 0 }
+      }
+      acc[event.venue_name][event.click_type] += 1
+      return acc
+    }, {})
+  ).sort((a, b) => a.venue_name.localeCompare(b.venue_name))
+  const uniqueVisitors = new Set(clickEvents.map((event) => event.device_id)).size
+  const totalClicks = clickEvents.length
 
   async function loadInbox() {
     if (!supabase) return
@@ -582,6 +670,59 @@ export default function AdminApp({ onBack }: { onBack: () => void }) {
         {error && <div className="admin-error">{error}</div>}
         {notice && <div className="admin-notice">{notice}</div>}
 
+        <div className="admin-page-tabs" role="tablist" aria-label="Admin sections">
+          <button type="button" className={adminPage === 'venues' ? 'active' : ''}
+            aria-selected={adminPage === 'venues'} onClick={() => setAdminPage('venues')}>
+            <MapPin size={16} /> Venues
+          </button>
+          <button type="button" className={adminPage === 'analytics' ? 'active' : ''}
+            aria-selected={adminPage === 'analytics'} onClick={() => setAdminPage('analytics')}>
+            <BarChart3 size={16} /> Analytics
+          </button>
+        </div>
+
+        {adminPage === 'analytics' ? (
+          <section className="venue-analytics">
+            <div className="community-inbox-header">
+              <div><div className="admin-kicker">PERFORMANCE</div><h2>Venue Analytics</h2>
+                <p>Track how visitors use website, Facebook, and location links.</p></div>
+              <button type="button" className="admin-quiet" onClick={loadAnalytics} disabled={analyticsLoading}>
+                <RefreshCw size={15} /> {analyticsLoading ? 'Refreshing…' : 'Refresh analytics'}
+              </button>
+            </div>
+            <div className="analytics-filters">
+              <div className="analytics-period-tabs" role="group" aria-label="Analytics period">
+                <button type="button" className={analyticsMode === 'daily' ? 'active' : ''} onClick={() => setAnalyticsMode('daily')}>Daily</button>
+                <button type="button" className={analyticsMode === 'monthly' ? 'active' : ''} onClick={() => setAnalyticsMode('monthly')}>Monthly</button>
+                <button type="button" className={analyticsMode === 'custom' ? 'active' : ''} onClick={() => setAnalyticsMode('custom')}>Specific date range</button>
+              </div>
+              {analyticsMode === 'custom' && <div className="analytics-date-fields">
+                <label>From<input type="date" value={analyticsStart} max={analyticsEnd || todayPHT()} onChange={(e) => setAnalyticsStart(e.target.value)} /></label>
+                <label>To<input type="date" value={analyticsEnd} min={analyticsStart} max={todayPHT()} onChange={(e) => setAnalyticsEnd(e.target.value)} /></label>
+              </div>}
+              <button type="button" className="admin-primary" onClick={loadAnalytics} disabled={analyticsLoading}>Apply date filter</button>
+              <span className="analytics-period-note">{analyticsMode === 'daily' ? `Today · ${todayPHT()} (PHT)` : analyticsMode === 'monthly' ? `This month · ${monthStartPHT()} to ${todayPHT()} (PHT)` : `${analyticsStart} to ${analyticsEnd} (PHT)`}</span>
+            </div>
+            {analyticsError && <div className="admin-error" role="alert">{analyticsError}</div>}
+            <div className="analytics-stat-grid">
+              <div className="analytics-stat"><span>Unique visitors</span><strong>{uniqueVisitors.toLocaleString()}</strong></div>
+              <div className="analytics-stat"><span>Total link clicks</span><strong>{totalClicks.toLocaleString()}</strong></div>
+            </div>
+            <div className="analytics-table-wrap"><h3>Venue Click Breakdown</h3>
+              {analyticsLoading ? <p className="admin-muted">Loading analytics…</p> : (
+                <table className="analytics-table">
+                  <thead><tr><th>Venue name</th><th>Facebook</th><th>Website</th><th>Location</th><th>Total</th></tr></thead>
+                  <tbody>{analyticsRows.length ? analyticsRows.map((row) => (
+                    <tr key={row.venue_name}><td>{row.venue_name}</td><td>{row.facebook}</td><td>{row.website}</td><td>{row.location}</td><td><strong>{row.facebook + row.website + row.location}</strong></td></tr>
+                  )) : <tr><td colSpan={5} className="analytics-empty">No clicks recorded for this period.</td></tr>}</tbody>
+                  <tfoot><tr><th>Total</th><th>{analyticsRows.reduce((n, r) => n + r.facebook, 0)}</th><th>{analyticsRows.reduce((n, r) => n + r.website, 0)}</th><th>{analyticsRows.reduce((n, r) => n + r.location, 0)}</th><th>{totalClicks}</th></tr></tfoot>
+                </table>
+              )}
+            </div>
+            <p className="community-hint">Unique visitors are estimated by distinct browser device IDs. Clearing browser storage or using another browser may create a new visitor ID.</p>
+          </section>
+        ) : (
+        <>
         {editing ? (
           <form className="admin-editor" onSubmit={saveCourt}>
             <div className="admin-editor-head">
@@ -997,6 +1138,8 @@ export default function AdminApp({ onBack }: { onBack: () => void }) {
           )}
           <p className="community-hint">Approving a suggestion marks it as reviewed; it does not automatically publish a court. Use “Add new court” to publish it.</p>
         </section>
+        </>
+        )}
       </div>
     </AdminShell>
   )

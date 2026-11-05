@@ -1,0 +1,115 @@
+/* SF Pickle Courts — Analytics dashboard polish */
+.admin-dashboard:has(.venue-analytics) {
+  width: min(1180px, calc(100% - 48px));
+  max-width: 1180px;
+  margin-inline: auto;
+}
+.venue-analytics {
+  display: grid;
+  gap: 26px;
+  width: 100%;
+  color: #142b3b;
+}
+.venue-analytics > header,
+.venue-analytics > .analytics-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+}
+.venue-analytics h2,
+.venue-analytics h3 { color: #142b3b; margin: 0; }
+.venue-analytics h2 { font-size: clamp(24px, 3vw, 32px); letter-spacing: -.7px; }
+.venue-analytics h3 { font-size: 18px; font-weight: 750; }
+.venue-analytics p { color: #647887; }
+.analytics-filters {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 18px;
+  padding: 20px; background: #fff; border: 1px solid #e1e8e8;
+  border-radius: 16px; box-shadow: 0 8px 24px rgba(20,43,59,.05);
+}
+.analytics-period-tabs {
+  display: inline-flex; gap: 4px; padding: 5px; background: #f0f4f3;
+  border: 1px solid #e4ebea; border-radius: 11px;
+}
+.analytics-period-tabs button {
+  appearance: none; border: 0; border-radius: 8px; background: transparent;
+  color: #536875; padding: 10px 15px; font: inherit; font-size: 14px;
+  font-weight: 650; cursor: pointer; transition: .18s ease;
+}
+.analytics-period-tabs button:hover { background: #e4ebea; }
+.analytics-period-tabs button.active {
+  color: #142b3b; background: #d8f36a; border: 0;
+  box-shadow: 0 2px 6px rgba(20,43,59,.12);
+}
+.analytics-date-fields { display: flex; flex-wrap: wrap; gap: 12px; }
+.analytics-date-fields label {
+  display: grid; gap: 7px; color: #536875; font-size: 12px;
+  font-weight: 750; letter-spacing: .04em; text-transform: uppercase;
+}
+.analytics-date-fields input[type="date"] {
+  min-height: 44px; min-width: 170px; padding: 0 12px;
+  color: #142b3b; background: #fbfcfa; border: 1px solid #d6e0df;
+  border-radius: 9px; font: inherit; font-size: 14px; font-weight: 600;
+  color-scheme: light; cursor: pointer;
+}
+.analytics-date-fields input[type="date"]:focus {
+  outline: 3px solid rgba(216,243,106,.45); border-color: #9ebd3e;
+}
+.venue-analytics .admin-primary { min-height: 43px; padding: 0 18px; border-radius: 9px; }
+.analytics-period-note { flex-basis: 100%; color: #738590; font-size: 12px; }
+.analytics-stat-grid {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px;
+}
+.analytics-stat {
+  position: relative; overflow: hidden; display: grid; gap: 10px;
+  padding: 24px 26px; min-height: 126px; background: #fff;
+  border: 1px solid #e1e8e8; border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(20,43,59,.05);
+}
+.analytics-stat::after {
+  content: ''; position: absolute; width: 90px; height: 90px; right: -22px; bottom: -34px;
+  border-radius: 50%; background: #d8f36a; opacity: .38;
+}
+.analytics-stat span { color: #637985; font-size: 13px; font-weight: 650; }
+.analytics-stat strong { color: #142b3b; font-size: clamp(30px, 4vw, 40px); line-height: 1; letter-spacing: -1px; }
+.analytics-table-wrap {
+  overflow: hidden; padding: 22px; background: #fff;
+  border: 1px solid #e1e8e8; border-radius: 16px;
+  box-shadow: 0 8px 24px rgba(20,43,59,.05);
+}
+.analytics-table-wrap h3 { margin: 0 0 18px; }
+.analytics-table { width: 100%; border-collapse: separate; border-spacing: 0; text-align: left; }
+.analytics-table th, .analytics-table td {
+  padding: 15px 16px; border-bottom: 1px solid #edf1ef; white-space: nowrap;
+  font-size: 14px;
+}
+.analytics-table thead th {
+  color: #647985; background: #f4f7f4; font-size: 11px;
+  font-weight: 800; letter-spacing: .06em; text-transform: uppercase;
+}
+.analytics-table thead th:first-child { border-radius: 8px 0 0 8px; }
+.analytics-table thead th:last-child { border-radius: 0 8px 8px 0; }
+.analytics-table tbody td:first-child { color: #142b3b; font-weight: 700; }
+.analytics-table tbody td:not(:first-child), .analytics-table tfoot th:not(:first-child) { text-align: right; font-variant-numeric: tabular-nums; }
+.analytics-table tbody tr:hover { background: #fbfcf7; }
+.analytics-table tfoot th { padding-top: 16px; color: #142b3b; background: #f1f6df; font-weight: 800; }
+.analytics-table tfoot th:first-child { border-radius: 0 0 0 8px; }
+.analytics-table tfoot th:last-child { border-radius: 0 0 8px 0; }
+.analytics-empty { text-align: center; color: #7a8a91; padding: 34px 12px !important; }
+.venue-analytics .admin-error { border-radius: 10px; }
+@media (max-width: 720px) {
+  .admin-dashboard:has(.venue-analytics) { width: min(100% - 28px, 1180px); }
+  .analytics-filters { align-items: stretch; }
+  .analytics-period-tabs { display: grid; grid-template-columns: repeat(3, 1fr); }
+  .analytics-period-tabs button { padding: 10px 7px; font-size: 12px; }
+  .analytics-date-fields { display: grid; grid-template-columns: 1fr 1fr; width: 100%; }
+  .analytics-date-fields label, .analytics-date-fields input[type="date"] { min-width: 0; width: 100%; }
+  .analytics-stat-grid { gap: 10px; }
+  .analytics-stat { padding: 18px; min-height: 105px; }
+  .analytics-table-wrap { padding: 14px; }
+  .analytics-table th, .analytics-table td { padding: 12px 10px; font-size: 12px; }
+}
+@media (max-width: 420px) {
+  .analytics-stat-grid { grid-template-columns: 1fr; }
+  .analytics-date-fields { grid-template-columns: 1fr; }
+}
