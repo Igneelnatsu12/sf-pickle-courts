@@ -15,6 +15,72 @@ import { supabase, isSupabaseConfigured } from './lib/supabase'
 import AdminApp from './AdminApp'
 import './styles.css'
 
+const DEVICE_ID_STORAGE_KEY = 'sf-pickle-courts-device-id'
+
+function createDeviceUuid(): string {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID()
+  }
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (character) => {
+    const random = Math.floor(Math.random() * 16)
+    return (character === 'x' ? random : (random & 0x3) | 0x8).toString(16)
+  })
+}
+
+type VenueClickType = 'website' | 'facebook' | 'location'
+
+function getDeviceId(): string {
+  try {
+    const existingId = window.localStorage.getItem(DEVICE_ID_STORAGE_KEY)
+    if (existingId) return existingId
+
+    const newId = createDeviceUuid()
+
+    window.localStorage.setItem(DEVICE_ID_STORAGE_KEY, newId)
+    return newId
+  } catch {
+    // Storage may be unavailable in private/restricted browser contexts.
+    return createDeviceUuid()
+  }
+}
+
+function getDeviceDetails() {
+  const userAgent = navigator.userAgent || ''
+  const platform = navigator.platform || ''
+  const ua = userAgent.toLowerCase()
+
+  let deviceType = 'desktop'
+  if (/ipad|tablet|playbook|silk/.test(ua) ||
+      (platform === 'MacIntel' && navigator.maxTouchPoints > 1)) {
+    deviceType = 'tablet'
+  } else if (/mobi|iphone|ipod|android/.test(ua)) {
+    deviceType = 'mobile'
+  }
+
+  let operatingSystem = 'Unknown'
+  if (/iphone|ipad|ipod/.test(ua) || (platform === 'MacIntel' && navigator.maxTouchPoints > 1)) {
+    operatingSystem = 'iOS'
+  } else if (/android/.test(ua)) {
+    operatingSystem = 'Android'
+  } else if (/windows/.test(ua)) {
+    operatingSystem = 'Windows'
+  } else if (/macintosh|mac os/.test(ua) || /mac/i.test(platform)) {
+    operatingSystem = 'macOS'
+  } else if (/linux/.test(ua) || /linux/i.test(platform)) {
+    operatingSystem = 'Linux'
+  }
+
+  let browser = 'Unknown'
+  if (/edg\//.test(ua)) browser = 'Edge'
+  else if (/opr\//.test(ua) || /opera/.test(ua)) browser = 'Opera'
+  else if (/samsungbrowser/.test(ua)) browser = 'Samsung Internet'
+  else if (/crios|chrome\//.test(ua)) browser = 'Chrome'
+  else if (/fxios|firefox\//.test(ua)) browser = 'Firefox'
+  else if (/safari\//.test(ua)) browser = 'Safari'
+
+  return { deviceType, operatingSystem, browser }
+}
+
 function PickleballMark() {
   return (
     <span className="brand-mark" aria-hidden="true">
@@ -91,6 +157,25 @@ export default function App() {
   const [feedbackSuccess, setFeedbackSuccess] = useState(false)
 
   const searchRef = useRef<HTMLInputElement>(null)
+
+  const trackVenueClick = (venueName: string, clickType: VenueClickType) => {
+    if (!supabase || !isSupabaseConfigured) return
+
+    const device = getDeviceDetails()
+    const event = {
+      device_id: getDeviceId(),
+      venue_name: venueName,
+      click_type: clickType,
+      device_type: device.deviceType,
+      operating_system: device.operatingSystem,
+      browser: device.browser,
+    }
+
+    // Fire the analytics insert without delaying the visitor's navigation.
+    void supabase.from('venue_click_events').insert(event).then(({ error }) => {
+      if (error) console.error('Could not record venue click:', error.message)
+    })
+  }
 
   const filteredCourts = useMemo(() => {
     const normalized = query.trim().toLowerCase()
@@ -717,6 +802,7 @@ export default function App() {
                   href={selectedCourt.url}
                   target="_blank"
                   rel="noopener noreferrer"
+                  onClick={() => trackVenueClick(selectedCourt.name, 'website')}
                 >
                   <span className="venue-link-icon">
                     <ArrowUpRight size={18} />
@@ -746,6 +832,7 @@ export default function App() {
                   href={selectedCourt.facebookUrl}
                   target="_blank"
                   rel="noopener noreferrer"
+                  onClick={() => trackVenueClick(selectedCourt.name, 'facebook')}
                 >
                   <span className="venue-link-icon facebook-icon">f</span>
                   <span>
@@ -775,6 +862,7 @@ export default function App() {
                 }
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={() => trackVenueClick(selectedCourt.name, 'location')}
               >
                 <span className="venue-link-icon">
                   <MapPin size={18} />
