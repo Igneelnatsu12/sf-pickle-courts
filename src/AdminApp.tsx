@@ -13,6 +13,8 @@ import {
   MapPin,
   RefreshCw,
   BarChart3,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react'
 import { supabase, isSupabaseConfigured } from './lib/supabase'
 import './admin.css'
@@ -129,6 +131,16 @@ const todayPHT = () => new Intl.DateTimeFormat('en-CA', {
 
 const monthStartPHT = () => `${todayPHT().slice(0, 7)}-01`
 
+const shiftDay = (date: string, amount: number) => {
+  const [year, month, day] = date.split('-').map(Number)
+  return new Date(Date.UTC(year, month - 1, day + amount)).toISOString().slice(0, 10)
+}
+
+const formatAnalyticsDay = (date: string) =>
+  new Date(`${date}T00:00:00Z`).toLocaleDateString('en-PH', {
+    timeZone: 'UTC', weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+  })
+
 const addOneDay = (date: string) => {
   const [year, month, day] = date.split('-').map(Number)
   return new Date(Date.UTC(year, month - 1, day + 1)).toISOString().slice(0, 10)
@@ -154,6 +166,7 @@ export default function AdminApp({ onBack }: { onBack: () => void }) {
   const [inboxNotice, setInboxNotice] = useState('')
   const [adminPage, setAdminPage] = useState<'venues' | 'analytics'>('venues')
   const [analyticsMode, setAnalyticsMode] = useState<'daily' | 'monthly' | 'custom'>('daily')
+  const [dailyDate, setDailyDate] = useState(todayPHT())
   const [analyticsStart, setAnalyticsStart] = useState(todayPHT())
   const [analyticsEnd, setAnalyticsEnd] = useState(todayPHT())
   const [clickEvents, setClickEvents] = useState<ClickEvent[]>([])
@@ -210,14 +223,15 @@ export default function AdminApp({ onBack }: { onBack: () => void }) {
     setBusy(false)
   }
 
-  async function loadAnalytics() {
+  async function loadAnalytics(dailyDateOverride?: string) {
     if (!supabase) return
     setAnalyticsLoading(true)
     setAnalyticsError('')
     const today = todayPHT()
-    const startDate = analyticsMode === 'daily' ? today :
+    const selectedDailyDate = dailyDateOverride || dailyDate
+    const startDate = analyticsMode === 'daily' ? selectedDailyDate :
       analyticsMode === 'monthly' ? monthStartPHT() : analyticsStart
-    const endDate = analyticsMode === 'daily' ? today :
+    const endDate = analyticsMode === 'daily' ? selectedDailyDate :
       analyticsMode === 'monthly' ? today : analyticsEnd
 
     if (!startDate || !endDate || startDate > endDate) {
@@ -686,7 +700,7 @@ export default function AdminApp({ onBack }: { onBack: () => void }) {
             <div className="community-inbox-header">
               <div><div className="admin-kicker">PERFORMANCE</div><h2>Venue Analytics</h2>
                 <p>Track how visitors use website, Facebook, and location links.</p></div>
-              <button type="button" className="admin-quiet" onClick={loadAnalytics} disabled={analyticsLoading}>
+              <button type="button" className="admin-quiet" onClick={() => loadAnalytics()} disabled={analyticsLoading}>
                 <RefreshCw size={15} /> {analyticsLoading ? 'Refreshing…' : 'Refresh analytics'}
               </button>
             </div>
@@ -696,12 +710,45 @@ export default function AdminApp({ onBack }: { onBack: () => void }) {
                 <button type="button" className={analyticsMode === 'monthly' ? 'active' : ''} onClick={() => setAnalyticsMode('monthly')}>Monthly</button>
                 <button type="button" className={analyticsMode === 'custom' ? 'active' : ''} onClick={() => setAnalyticsMode('custom')}>Specific date range</button>
               </div>
+              {analyticsMode === 'daily' && (
+                <div className="analytics-day-navigation" aria-label="Choose analytics day">
+                  <button
+                    type="button"
+                    className="analytics-day-arrow"
+                    aria-label="Previous day"
+                    disabled={analyticsLoading}
+                    onClick={() => {
+                      const nextDate = shiftDay(dailyDate, -1)
+                      setDailyDate(nextDate)
+                      loadAnalytics(nextDate)
+                    }}
+                  >
+                    <ChevronLeft size={20} />
+                  </button>
+                  <strong>{formatAnalyticsDay(dailyDate)}</strong>
+                  <button
+                    type="button"
+                    className="analytics-day-arrow"
+                    aria-label="Next day"
+                    disabled={analyticsLoading || dailyDate >= todayPHT()}
+                    onClick={() => {
+                      const nextDate = shiftDay(dailyDate, 1)
+                      setDailyDate(nextDate)
+                      loadAnalytics(nextDate)
+                    }}
+                  >
+                    <ChevronRight size={20} />
+                  </button>
+                </div>
+              )}
               {analyticsMode === 'custom' && <div className="analytics-date-fields">
                 <label>From<input type="date" value={analyticsStart} max={analyticsEnd || todayPHT()} onChange={(e) => setAnalyticsStart(e.target.value)} /></label>
                 <label>To<input type="date" value={analyticsEnd} min={analyticsStart} max={todayPHT()} onChange={(e) => setAnalyticsEnd(e.target.value)} /></label>
               </div>}
-              <button type="button" className="admin-primary" onClick={loadAnalytics} disabled={analyticsLoading}>Apply date filter</button>
-              <span className="analytics-period-note">{analyticsMode === 'daily' ? `Today · ${todayPHT()} (PHT)` : analyticsMode === 'monthly' ? `This month · ${monthStartPHT()} to ${todayPHT()} (PHT)` : `${analyticsStart} to ${analyticsEnd} (PHT)`}</span>
+              {analyticsMode !== 'daily' && (
+                <button type="button" className="admin-primary" onClick={() => loadAnalytics()} disabled={analyticsLoading}>Apply date filter</button>
+              )}
+              <span className="analytics-period-note">{analyticsMode === 'daily' ? `Selected day · ${dailyDate} (PHT)` : analyticsMode === 'monthly' ? `This month · ${monthStartPHT()} to ${todayPHT()} (PHT)` : `${analyticsStart} to ${analyticsEnd} (PHT)`}</span>
             </div>
             {analyticsError && <div className="admin-error" role="alert">{analyticsError}</div>}
             <div className="analytics-stat-grid">
